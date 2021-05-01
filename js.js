@@ -19,6 +19,20 @@ $(function() {
                 if (!form.hasClass('podolsk')) {
                     var card = form.find('input[name="cid"]').val(),
                         club = $('#pricesModal').find('input[name="club"]').val();
+
+                    /* 01.05.2021 12:00 - 14:00
+                    Добавлен функционал отправки в GTM события "Отправлена форма Узнать цену"
+                    (для углублённой настройки GA4 и сквозной аналитики) */
+                    var city = form.find('input[name="city"]').val();
+                    var abon = form.find('input[name="abon"]').val();
+                    dataLayer.push({
+                        'event': 'js_SubmitForm_OrderPrice',
+                        'tarif_id': card,
+                        'club': club,
+                        'city': city,
+                        'card_title': abon
+                    });
+
                     $('.card').find('.buy_box_price').removeClass('hidden');
                     $('.card').find('.show_prices').hide();
                     $('.card').find('.card_popup_open').removeClass('hidden');
@@ -33,14 +47,65 @@ $(function() {
                     $(".cards_wrapper .buy_box").height($(".cards_wrapper .buy_box").height() + ph);
                     $('.cards_wrapper .buy_box').not('.online_complex').find(".buy_box_price").height(ph)
                 }else{
+
+                    /* 01.05.2021 12:00 - 14:00
+                    Добавлен функционал отправки в GTM события "Отправлена форма Узнать цену" */
+                    dataLayer.push({'event': 'js_SubmitForm_OrderPrice'});
+
                     form.html(data);
                 }
             } else {
                 form.html(data);
                 if (modal.attr('id') == 'firstVisitModal') {
-                    window.location = 'https://alexfitness.ru/fvisit_ok'
+
+                    /* 01.05.2021 12:00 - 14:00
+                    Добавлены строчки отправки в GTM события "Отправлена форма Бесплатный визит / Тест драйв"
+                    (для углублённой настройки GA4 и сквозной/ML аналитики)
+                    Отложенный редирект нужен чтобы GTM успел обработать триггер и отправить в аналитики события */
+                    var modal_title = $(modal).find('.modal-title').text();
+                    dataLayer.push({
+                        'event': 'js_SubmitForm_FreeVisit',
+                        'card_title': modal_title,
+                        'eventCallback' : function() {
+                            // Редирект сработает сразу после того как будут выполнены GTM теги связанные с триггером js_SubmitForm_QUIZ
+                            console.log('eventCallback redirect');
+                            window.location = 'https://alexfitness.ru/fvisit_ok';
+                        }
+                    });
+                    setTimeout(function(){
+                        // (запасной вариант) Если по какой-то причине eventCallback не сработает, будет хард редирект через 3 секунды
+                        window.location = 'https://alexfitness.ru/fvisit_ok';
+                    } , 3000);
+
+                    // Старый редирект
+                    //window.location = 'https://alexfitness.ru/fvisit_ok';
+
                 } else if (modal.attr('id') == 'myModal4') {
-                    window.location = 'https://alexfitness.ru/callback_ok'
+
+                    /* 01.05.2021 12:00 - 14:00
+                    Добавлены строчки отправки в GTM события "Отправлена форма Заказать звонок / Перезвоните мне"
+                    (для углублённой настройки GA4 и сквозной аналитики)
+                    Отложенный редирект нужен чтобы GTM успел обработать триггер и отправить в аналитики события */
+
+                    dataLayer.push({
+                        'event': 'js_SubmitForm_CallToMe',
+                        'eventCallback' : function() {
+                            // Редирект сработает сразу после того как будут выполнены GTM теги связанные с триггером js_SubmitForm_QUIZ
+                            console.log('eventCallback redirect');
+                            window.location = 'https://alexfitness.ru/callback_ok';
+                        }
+                    });
+                    setTimeout(function(){
+                        // (запасной вариант) Если по какой-то причине eventCallback не сработает, будет хард редирект через 3 секунды
+                        window.location = 'https://alexfitness.ru/callback_ok';
+                    } , 3000);
+
+                    // Старый редирект
+                    //window.location = 'https://alexfitness.ru/callback_ok'
+                }else {
+                    dataLayer.push({
+                        'event': 'js_SubmitForm_CallToMe_without_popup'
+                    });
                 }
             }
         });
