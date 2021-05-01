@@ -16,9 +16,11 @@ $(function() {
         });
         $.post(form.attr('action'), form.serialize(), function(data) {
             if (form.hasClass('pricesForm')) {
+
                 if (!form.hasClass('podolsk')) {
                     var card = form.find('input[name="cid"]').val(),
                         club = $('#pricesModal').find('input[name="club"]').val();
+
 
                     /* 01.05.2021 12:00 - 14:00
                     Добавлен функционал отправки в GTM события "Отправлена форма Узнать цену"
@@ -49,6 +51,7 @@ $(function() {
                 }else{
 
                     /* 01.05.2021 12:00 - 14:00
+                    For Podolsk
                     Добавлен функционал отправки в GTM события "Отправлена форма Узнать цену" */
                     dataLayer.push({'event': 'js_SubmitForm_OrderPrice'});
 
