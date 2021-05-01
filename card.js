@@ -229,12 +229,42 @@ $(function(){
             try{fbq('track', 'Lead');}catch(err){}
             $.post(form.attr('action')+'?action=order', form.serialize(), function(data){
                 if(data){
-                    if(data.type == 'url'){
-                        localStorage.removeItem('halva');
-                        document.location.href = data.val;
-                    }else if(data.type == 'form'){
-                        $(data.val).appendTo('body');
-                    }else if(data.type == 'error'){
+
+                    // 01.05.2021 15:00 - 17:00
+                    // Добавлены строчки отправки в GTM события "Отправлена форма Купить"
+                    // (для углублённой настройки GA4 и сквозной/ML аналитики)
+                    // Отложенный редирект нужен чтобы GTM успел обработать триггер и отправить в аналитики события
+
+                    if(data.type != 'error') {
+                        console.log('order form success');
+                        dataLayer.push({
+                            'event': 'js_SubmitForm_Pay',
+                            'eventCallback' : function() {
+                                // Редирект сработает сразу после того как будут выполнены GTM теги связанные с триггером js_SubmitForm_QUIZ
+                                if(data.type == 'url'){
+                                    console.log('eventCallback redirect');
+                                    localStorage.removeItem('halva');
+                                    document.location.href = data.val;
+                                }else if(data.type == 'form'){
+                                    console.log('eventCallback appendTo');
+                                    $(data.val).appendTo('body');
+                                }
+                            }
+                        });
+                        setTimeout(function(){
+                            // (запасной вариант) Если по какой-то причине eventCallback не сработает, будет хард редирект через 3 секунды
+                            if(data.type == 'url'){
+                                localStorage.removeItem('halva');
+                                document.location.href = data.val;
+                                console.log('setTimeout 3000 ms redirect');
+
+                            }else if(data.type == 'form'){
+                                $(data.val).appendTo('body');
+                                console.log('setTimeout 3000 ms appendTo');
+                            }
+                        } , 3000);
+                    }
+                    if(data.type == 'error'){
                         alert(data.val);
                         location.reload();
                         $('div.no2click div',form).hide();
